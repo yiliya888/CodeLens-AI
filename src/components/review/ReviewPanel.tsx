@@ -1,12 +1,10 @@
 import { AlertTriangle, LoaderCircle, Play, ScanSearch } from 'lucide-react'
-import { useEffect } from 'react'
 
 import { IssueList } from '@/components/review/IssueList'
 import { ReviewScore } from '@/components/review/ReviewScore'
 import { Button } from '@/components/ui/button'
-import { reviewCode } from '@/services/reviewService'
+import { useReview } from '@/hooks/useReview'
 import { useFileStore } from '@/stores/file-store'
-import { useReviewStore } from '@/stores/review-store'
 import type { ReviewStatus } from '@/types/review'
 import { cn } from '@/utils/cn'
 
@@ -21,35 +19,9 @@ export function ReviewPanel() {
   const activeFile = useFileStore((state) =>
     state.files.find((file) => file.id === state.activeFileId),
   )
-  const currentResult = useReviewStore((state) => state.currentResult)
-  const status = useReviewStore((state) => state.status)
-  const selectedIssue = useReviewStore((state) => state.selectedIssue)
-  const errorMessage = useReviewStore((state) => state.errorMessage)
-  const startReview = useReviewStore((state) => state.startReview)
-  const completeReview = useReviewStore((state) => state.completeReview)
-  const failReview = useReviewStore((state) => state.failReview)
-  const selectIssue = useReviewStore((state) => state.selectIssue)
-  const resetReview = useReviewStore((state) => state.resetReview)
+  const { currentResult, status, selectedIssueId, errorMessage, isLoading, review, selectIssue } =
+    useReview(activeFile)
   const currentStatus = statusConfig[status]
-
-  useEffect(() => {
-    resetReview()
-  }, [activeFile?.id, resetReview])
-
-  async function handleReview() {
-    if (!activeFile) return
-
-    const reviewedFileId = activeFile.id
-    startReview()
-    try {
-      const result = await reviewCode(activeFile.content, activeFile.language)
-      if (useFileStore.getState().activeFileId !== reviewedFileId) return
-      completeReview(result)
-    } catch {
-      if (useFileStore.getState().activeFileId !== reviewedFileId) return
-      failReview('Review 未能完成，请稍后重试。')
-    }
-  }
 
   return (
     <aside className="border-border bg-panel flex min-h-72 w-full shrink-0 flex-col border-t lg:min-h-0 lg:w-88 lg:border-t-0 lg:border-l xl:w-96">
@@ -70,15 +42,15 @@ export function ReviewPanel() {
           <Button
             size="sm"
             className="h-7 px-2.5 text-[11px]"
-            onClick={() => void handleReview()}
-            disabled={!activeFile || status === 'reviewing'}
+            onClick={() => void review()}
+            disabled={!activeFile || isLoading}
           >
-            {status === 'reviewing' ? (
+            {isLoading ? (
               <LoaderCircle className="animate-spin" />
             ) : (
               <Play className="fill-current" />
             )}
-            {status === 'reviewing' ? 'Reviewing' : 'Review'}
+            {isLoading ? 'Reviewing' : 'Review'}
           </Button>
         </div>
       </div>
@@ -123,7 +95,7 @@ export function ReviewPanel() {
             <ReviewScore score={currentResult.score} summary={currentResult.summary} />
             <IssueList
               issues={currentResult.issues}
-              selectedIssue={selectedIssue}
+              selectedIssueId={selectedIssueId}
               onSelectIssue={selectIssue}
             />
           </div>

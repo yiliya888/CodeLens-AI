@@ -3,11 +3,11 @@ import type { ReviewIssue } from '@/types/review'
 
 interface IssueListProps {
   issues: ReviewIssue[]
-  selectedIssue: ReviewIssue | null
-  onSelectIssue: (issue: ReviewIssue) => void
+  selectedIssueId: string | null
+  onSelectIssue: (issueId: string) => void
 }
 
-export function IssueList({ issues, selectedIssue, onSelectIssue }: IssueListProps) {
+export function IssueList({ issues, selectedIssueId, onSelectIssue }: IssueListProps) {
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
@@ -23,8 +23,8 @@ export function IssueList({ issues, selectedIssue, onSelectIssue }: IssueListPro
           <IssueCard
             key={issue.id}
             issue={issue}
-            isSelected={selectedIssue?.id === issue.id}
-            onSelect={onSelectIssue}
+            isSelected={selectedIssueId === issue.id}
+            onSelect={(selectedIssue) => onSelectIssue(selectedIssue.id)}
           />
         ))}
       </div>

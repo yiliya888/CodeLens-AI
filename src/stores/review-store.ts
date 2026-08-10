@@ -1,49 +1,65 @@
 import { create } from 'zustand'
 
-import type { ReviewIssue, ReviewResult, ReviewStatus } from '@/types/review'
+import type { ReviewResult, ReviewStatus } from '@/types/review'
 
 interface ReviewStore {
   currentResult: ReviewResult | null
   status: ReviewStatus
-  selectedIssue: ReviewIssue | null
+  selectedIssueId: string | null
   errorMessage: string | null
-  startReview: () => void
-  completeReview: (result: ReviewResult) => void
-  failReview: (message: string) => void
-  selectIssue: (issue: ReviewIssue) => void
+  currentRequestId: string | null
+  startReview: (requestId: string) => void
+  completeReview: (requestId: string, result: ReviewResult) => void
+  failReview: (requestId: string, message: string) => void
+  cancelReview: (requestId: string) => void
+  selectIssue: (issueId: string) => void
   resetReview: () => void
 }
 
 const initialState = {
   currentResult: null,
   status: 'idle' as const,
-  selectedIssue: null,
+  selectedIssueId: null,
   errorMessage: null,
+  currentRequestId: null,
 }
 
 export const useReviewStore = create<ReviewStore>((set) => ({
   ...initialState,
-  startReview: () =>
+  startReview: (requestId) =>
     set({
       currentResult: null,
       status: 'reviewing',
-      selectedIssue: null,
+      selectedIssueId: null,
       errorMessage: null,
+      currentRequestId: requestId,
     }),
-  completeReview: (result) =>
-    set({
-      currentResult: result,
-      status: 'completed',
-      selectedIssue: null,
-      errorMessage: null,
-    }),
-  failReview: (message) =>
-    set({
-      currentResult: null,
-      status: 'error',
-      selectedIssue: null,
-      errorMessage: message,
-    }),
-  selectIssue: (issue) => set({ selectedIssue: issue }),
+  completeReview: (requestId, result) =>
+    set((state) =>
+      state.currentRequestId === requestId
+        ? {
+            currentResult: result,
+            status: 'completed',
+            selectedIssueId: null,
+            errorMessage: null,
+            currentRequestId: null,
+          }
+        : state,
+    ),
+  failReview: (requestId, message) =>
+    set((state) =>
+      state.currentRequestId === requestId
+        ? {
+            currentResult: null,
+            status: 'error',
+            selectedIssueId: null,
+            errorMessage: message,
+            currentRequestId: null,
+          }
+        : state,
+    ),
+  cancelReview: (requestId) =>
+    set((state) => (state.currentRequestId === requestId ? initialState : state)),
+  selectIssue: (issueId) => set({ selectedIssueId: issueId }),
   resetReview: () => set(initialState),
 }))
