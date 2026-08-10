@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
+import { ReviewPanel } from '@/components/review/ReviewPanel'
 import { AppHeader } from '@/layouts/app-header'
 import { AppSidebar } from '@/layouts/app-sidebar'
 import { EditorPanel } from '@/layouts/editor-panel'
-import { ReviewPanel } from '@/layouts/review-panel'
 
 export function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
