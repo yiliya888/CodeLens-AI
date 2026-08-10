@@ -3,14 +3,14 @@ import { Minus, Plus, RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-
-export type CodeEditorLanguage = 'javascript' | 'typescript' | 'react' | 'vue'
+import type { CodeLanguage } from '@/types/editor'
 
 interface CodeEditorProps {
   value: string
-  language: CodeEditorLanguage
+  language: CodeLanguage
   onChange: (value: string) => void
   autoSaveKey?: string
+  filePath?: string
 }
 
 const MIN_FONT_SIZE = 12
@@ -19,7 +19,7 @@ const DEFAULT_FONT_SIZE = 14
 const AUTO_SAVE_DELAY = 500
 
 const languageConfig: Record<
-  CodeEditorLanguage,
+  CodeLanguage,
   { monacoLanguage: string; path: string; label: string }
 > = {
   javascript: {
@@ -53,6 +53,7 @@ export function CodeEditor({
   language,
   onChange,
   autoSaveKey = 'codelens-editor-draft',
+  filePath,
 }: CodeEditorProps) {
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE)
   const [isDark, setIsDark] = useState(getInitialTheme)
@@ -143,7 +144,7 @@ export function CodeEditor({
       <div className="min-h-0 flex-1">
         <Editor
           onMount={restoreDraft}
-          path={config.path}
+          path={filePath ?? config.path}
           language={config.monacoLanguage}
           value={value}
           onChange={handleChange}
