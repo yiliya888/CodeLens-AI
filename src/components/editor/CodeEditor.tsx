@@ -1,9 +1,13 @@
 import Editor from '@monaco-editor/react'
 import { Minus, Plus, RotateCcw } from 'lucide-react'
+import type { editor } from 'monaco-editor'
 import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { useMonacoEditor } from '@/hooks/useMonacoEditor'
 import type { CodeLanguage } from '@/types/editor'
+
+type MonacoApi = typeof import('monaco-editor')
 
 interface CodeEditorProps {
   value: string
@@ -58,6 +62,8 @@ export function CodeEditor({
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE)
   const [isDark, setIsDark] = useState(getInitialTheme)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mountedEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const { setEditor, clearEditor } = useMonacoEditor()
   const config = languageConfig[language]
   const storageKey = `${autoSaveKey}:${language}`
 
@@ -71,8 +77,9 @@ export function CodeEditor({
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      if (mountedEditorRef.current) clearEditor(mountedEditorRef.current)
     }
-  }, [])
+  }, [clearEditor])
 
   function restoreDraft() {
     if (value) return
@@ -89,6 +96,12 @@ export function CodeEditor({
     saveTimerRef.current = setTimeout(() => {
       localStorage.setItem(storageKey, code)
     }, AUTO_SAVE_DELAY)
+  }
+
+  function handleMount(editorInstance: editor.IStandaloneCodeEditor, monacoInstance: MonacoApi) {
+    mountedEditorRef.current = editorInstance
+    setEditor(editorInstance, monacoInstance)
+    restoreDraft()
   }
 
   function decreaseFontSize() {
@@ -143,7 +156,7 @@ export function CodeEditor({
 
       <div className="min-h-0 flex-1">
         <Editor
-          onMount={restoreDraft}
+          onMount={handleMount}
           path={filePath ?? config.path}
           language={config.monacoLanguage}
           value={value}

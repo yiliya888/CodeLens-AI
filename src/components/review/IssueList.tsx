@@ -4,7 +4,7 @@ import type { ReviewIssue } from '@/types/review'
 interface IssueListProps {
   issues: ReviewIssue[]
   selectedIssueId: string | null
-  onSelectIssue: (issueId: string) => void
+  onSelectIssue: (issue: ReviewIssue) => void
 }
 
 export function IssueList({ issues, selectedIssueId, onSelectIssue }: IssueListProps) {
@@ -24,7 +24,7 @@ export function IssueList({ issues, selectedIssueId, onSelectIssue }: IssueListP
             key={issue.id}
             issue={issue}
             isSelected={selectedIssueId === issue.id}
-            onSelect={(selectedIssue) => onSelectIssue(selectedIssue.id)}
+            onSelect={onSelectIssue}
           />
         ))}
       </div>

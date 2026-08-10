@@ -3,9 +3,11 @@ import { AlertTriangle, LoaderCircle, Play, ScanSearch } from 'lucide-react'
 import { IssueList } from '@/components/review/IssueList'
 import { ReviewScore } from '@/components/review/ReviewScore'
 import { Button } from '@/components/ui/button'
+import { useEditorMarkers } from '@/hooks/useEditorMarkers'
+import { useEditorNavigation } from '@/hooks/useEditorNavigation'
 import { useReview } from '@/hooks/useReview'
 import { useFileStore } from '@/stores/file-store'
-import type { ReviewStatus } from '@/types/review'
+import type { ReviewIssue, ReviewStatus } from '@/types/review'
 import { cn } from '@/utils/cn'
 
 const statusConfig: Record<ReviewStatus, { label: string; className: string }> = {
@@ -15,6 +17,8 @@ const statusConfig: Record<ReviewStatus, { label: string; className: string }> =
   error: { label: 'Error', className: 'text-red-400' },
 }
 
+const EMPTY_ISSUES: ReviewIssue[] = []
+
 export function ReviewPanel() {
   const activeFile = useFileStore((state) =>
     state.files.find((file) => file.id === state.activeFileId),
@@ -22,6 +26,16 @@ export function ReviewPanel() {
   const { currentResult, status, selectedIssueId, errorMessage, isLoading, review, selectIssue } =
     useReview(activeFile)
   const currentStatus = statusConfig[status]
+  const issues = currentResult?.issues ?? EMPTY_ISSUES
+  const selectedIssue = issues.find((issue) => issue.id === selectedIssueId) ?? null
+  const { navigateToIssue } = useEditorNavigation(selectedIssue)
+
+  useEditorMarkers(issues)
+
+  function handleSelectIssue(issue: ReviewIssue) {
+    selectIssue(issue.id)
+    navigateToIssue(issue)
+  }
 
   return (
     <aside className="border-border bg-panel flex min-h-72 w-full shrink-0 flex-col border-t lg:min-h-0 lg:w-88 lg:border-t-0 lg:border-l xl:w-96">
@@ -94,9 +108,9 @@ export function ReviewPanel() {
           <div className="space-y-4">
             <ReviewScore score={currentResult.score} summary={currentResult.summary} />
             <IssueList
-              issues={currentResult.issues}
+              issues={issues}
               selectedIssueId={selectedIssueId}
-              onSelectIssue={selectIssue}
+              onSelectIssue={handleSelectIssue}
             />
           </div>
         )}

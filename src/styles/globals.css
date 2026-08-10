@@ -84,3 +84,12 @@
       sans-serif;
   }
 }
+
+.review-issue-line-highlight {
+  background-color: color-mix(in oklab, var(--ring) 16%, transparent);
+}
+
+.review-issue-line-indicator {
+  margin-left: 3px;
+  border-left: 2px solid color-mix(in oklab, var(--ring) 75%, transparent);
+}
