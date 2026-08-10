@@ -5,9 +5,10 @@ interface IssueListProps {
   issues: ReviewIssue[]
   selectedIssueId: string | null
   onSelectIssue: (issue: ReviewIssue) => void
+  onFixIssue: (issue: ReviewIssue) => void
 }
 
-export function IssueList({ issues, selectedIssueId, onSelectIssue }: IssueListProps) {
+export function IssueList({ issues, selectedIssueId, onSelectIssue, onFixIssue }: IssueListProps) {
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
@@ -25,6 +26,7 @@ export function IssueList({ issues, selectedIssueId, onSelectIssue }: IssueListP
             issue={issue}
             isSelected={selectedIssueId === issue.id}
             onSelect={onSelectIssue}
+            onFix={onFixIssue}
           />
         ))}
       </div>

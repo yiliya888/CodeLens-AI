@@ -1,8 +1,10 @@
 import { AlertTriangle, LoaderCircle, Play, ScanSearch } from 'lucide-react'
 
+import { FixPreview } from '@/components/diff/FixPreview'
 import { IssueList } from '@/components/review/IssueList'
 import { ReviewScore } from '@/components/review/ReviewScore'
 import { Button } from '@/components/ui/button'
+import { useCodeFix } from '@/hooks/useCodeFix'
 import { useEditorMarkers } from '@/hooks/useEditorMarkers'
 import { useEditorNavigation } from '@/hooks/useEditorNavigation'
 import { useReview } from '@/hooks/useReview'
@@ -29,6 +31,7 @@ export function ReviewPanel() {
   const issues = currentResult?.issues ?? EMPTY_ISSUES
   const selectedIssue = issues.find((issue) => issue.id === selectedIssueId) ?? null
   const { navigateToIssue } = useEditorNavigation(selectedIssue)
+  const { preview, openFix, acceptFix, rejectFix } = useCodeFix(activeFile)
 
   useEditorMarkers(issues)
 
@@ -111,10 +114,21 @@ export function ReviewPanel() {
               issues={issues}
               selectedIssueId={selectedIssueId}
               onSelectIssue={handleSelectIssue}
+              onFixIssue={openFix}
             />
           </div>
         )}
       </div>
+
+      {preview && activeFile && (
+        <FixPreview
+          fileName={preview.fileName}
+          language={activeFile.language}
+          suggestion={preview.suggestion}
+          onAccept={acceptFix}
+          onReject={rejectFix}
+        />
+      )}
     </aside>
   )
 }

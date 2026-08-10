@@ -1,5 +1,6 @@
-import { AlertCircle, Info, ShieldAlert, TriangleAlert } from 'lucide-react'
+import { AlertCircle, Info, ShieldAlert, Sparkles, TriangleAlert } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
 import type { ReviewIssue } from '@/types/review'
 import { cn } from '@/utils/cn'
 
@@ -7,6 +8,7 @@ interface IssueCardProps {
   issue: ReviewIssue
   isSelected: boolean
   onSelect: (issue: ReviewIssue) => void
+  onFix: (issue: ReviewIssue) => void
 }
 
 const severityConfig = {
@@ -30,18 +32,22 @@ const severityConfig = {
   },
 } as const
 
-export function IssueCard({ issue, isSelected, onSelect }: IssueCardProps) {
+export function IssueCard({ issue, isSelected, onSelect, onFix }: IssueCardProps) {
   const config = severityConfig[issue.severity]
   const SeverityIcon = config.icon
 
   return (
-    <button
-      type="button"
+    <div
       className={cn(
         'bg-muted/10 hover:bg-muted/25 w-full rounded-lg border p-3 text-left transition-colors',
         isSelected ? config.border : 'border-border',
       )}
       onClick={() => onSelect(issue)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') onSelect(issue)
+      }}
+      role="button"
+      tabIndex={0}
       aria-pressed={isSelected}
     >
       <div className="flex items-start gap-2.5">
@@ -75,6 +81,21 @@ export function IssueCard({ issue, isSelected, onSelect }: IssueCardProps) {
         </div>
         <p className="text-muted-foreground text-[10px] leading-4">{issue.suggestion}</p>
       </div>
-    </button>
+
+      {issue.fixSuggestion && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-2.5 h-7 w-full text-[10px]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onFix(issue)
+          }}
+        >
+          <Sparkles className="size-3" />
+          Fix with AI
+        </Button>
+      )}
+    </div>
   )
 }
