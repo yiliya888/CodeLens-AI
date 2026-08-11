@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { reviewCode } from '@/services/reviewService'
+import { reviewCode } from '@/services/ai/reviewService'
 import { useFileStore } from '@/stores/file-store'
 import { useReviewStore } from '@/stores/review-store'
 import type { CodeFile } from '@/types/editor'

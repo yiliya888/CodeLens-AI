@@ -1,4 +1,4 @@
-import type { CodeLanguage } from '@/types/editor'
+import type { AIProvider } from '@/services/ai/types'
 import type { ReviewResult } from '@/types/review'
 
 const REVIEW_DELAY = 2_000
@@ -7,23 +7,23 @@ function wait(delay: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, delay))
 }
 
-function getMockResult(code: string, language: CodeLanguage): ReviewResult {
+function getMockResult(code: string, language: string): ReviewResult {
   const lineCount = Math.max(code.split('\n').length, 1)
   const createFixedCode = (label: string) => {
     const separator = code ? '\n\n' : ''
     const comment = language === 'vue' ? `<!-- Mock fix: ${label} -->` : `// Mock fix: ${label}`
     return `${code}${separator}${comment}`
   }
-  const languageName = {
+  const languageName: Record<string, string> = {
     javascript: 'JavaScript',
     typescript: 'TypeScript',
     react: 'React',
     vue: 'Vue',
-  }[language]
+  }
 
   return {
     score: 85,
-    summary: `${languageName} 代码结构清晰，整体可维护性良好。仍有少量性能、安全性和代码质量问题值得关注。`,
+    summary: `${languageName[language] ?? language} 代码结构清晰，整体可维护性良好。仍有少量性能、安全性和代码质量问题值得关注。`,
     issues: [
       {
         id: 'mock-performance-issue',
@@ -68,7 +68,9 @@ function getMockResult(code: string, language: CodeLanguage): ReviewResult {
   }
 }
 
-export async function reviewCode(code: string, language: CodeLanguage): Promise<ReviewResult> {
-  await wait(REVIEW_DELAY)
-  return getMockResult(code, language)
+export class MockProvider implements AIProvider {
+  async reviewCode(code: string, language: string): Promise<ReviewResult> {
+    await wait(REVIEW_DELAY)
+    return getMockResult(code, language)
+  }
 }
