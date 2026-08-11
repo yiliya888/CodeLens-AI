@@ -2,6 +2,7 @@ import { FilePlus2 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import { CodeEditor } from '@/components/editor/CodeEditor'
+import { FeedbackState } from '@/components/ui/feedback-state'
 import { useFileStore } from '@/stores/file-store'
 import type { CodeFile } from '@/types/editor'
 
@@ -15,10 +16,7 @@ function ActiveFileEditor({ file }: ActiveFileEditorProps) {
 
   useEffect(() => {
     const fileId = file.id
-
-    return () => {
-      updateFileContent(fileId, currentContentRef.current)
-    }
+    return () => updateFileContent(fileId, currentContentRef.current)
   }, [file.id, updateFileContent])
 
   function handleChange(content: string) {
@@ -44,11 +42,13 @@ export function EditorPanel() {
 
   if (!activeFile) {
     return (
-      <section className="bg-editor flex min-h-[55vh] min-w-0 flex-1 items-center justify-center lg:min-h-0">
-        <div className="text-muted-foreground text-center">
-          <FilePlus2 className="mx-auto mb-3 size-5" />
-          <p className="text-xs">在侧边栏新建一个文件</p>
-        </div>
+      <section className="bg-editor min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
+        <FeedbackState
+          className="h-full"
+          icon={<FilePlus2 className="size-4" />}
+          title="No file open"
+          description="在侧边栏新建或选择一个文件。"
+        />
       </section>
     )
   }

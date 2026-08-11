@@ -21,10 +21,17 @@ export function FixPreview({
   onReject,
 }: FixPreviewProps) {
   return (
-    <div className="border-border bg-background fixed inset-4 z-60 flex min-h-0 flex-col overflow-hidden rounded-xl border shadow-2xl sm:inset-8 lg:inset-12">
+    <div
+      className="border-border bg-background fixed inset-4 z-60 flex min-h-0 flex-col overflow-hidden rounded-xl border shadow-2xl sm:inset-8 lg:inset-12"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fix-preview-title"
+    >
       <header className="border-border flex h-12 shrink-0 items-center border-b px-3">
         <div className="min-w-0">
-          <h2 className="text-xs font-semibold">Fix Preview</h2>
+          <h2 id="fix-preview-title" className="text-xs font-semibold">
+            Fix Preview
+          </h2>
           <p className="text-muted-foreground truncate text-[10px]">{fileName}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">

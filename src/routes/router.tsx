@@ -1,9 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom'
 
 import { AppLayout } from '@/layouts/app-layout'
-import { HistoryPage } from '@/pages/history-page'
 
 export const router = createBrowserRouter([
-  { path: '/history', element: <HistoryPage /> },
+  {
+    path: '/history',
+    lazy: async () => {
+      const { HistoryPage } = await import('@/pages/history-page')
+      return { Component: HistoryPage }
+    },
+  },
   { path: '*', element: <AppLayout /> },
 ])

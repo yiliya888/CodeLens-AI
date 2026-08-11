@@ -193,8 +193,8 @@ async function requestCompletion(request: ReviewRequest, isRetry: boolean) {
   })
 
   if (!response.ok) {
-    const errorBody = await response.text()
-    throw new Error(`DeepSeek API request failed (${response.status}): ${errorBody}`)
+    await response.text()
+    throw new Error(`DeepSeek API request failed with status ${response.status}`)
   }
 
   const payload = (await response.json()) as DeepSeekResponse
@@ -231,8 +231,8 @@ async function requestStreamingCompletion(
   })
 
   if (!response.ok) {
-    const errorBody = await response.text()
-    throw new Error(`DeepSeek API request failed (${response.status}): ${errorBody}`)
+    await response.text()
+    throw new Error(`DeepSeek API request failed with status ${response.status}`)
   }
   if (!response.body) throw new Error('DeepSeek streaming response has no body')
 

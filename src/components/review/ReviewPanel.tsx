@@ -4,6 +4,7 @@ import { FixPreview } from '@/components/diff/FixPreview'
 import { IssueList } from '@/components/review/IssueList'
 import { ReviewScore } from '@/components/review/ReviewScore'
 import { Button } from '@/components/ui/button'
+import { FeedbackState } from '@/components/ui/feedback-state'
 import { useCodeFix } from '@/hooks/useCodeFix'
 import { useEditorMarkers } from '@/hooks/useEditorMarkers'
 import { useEditorNavigation } from '@/hooks/useEditorNavigation'
@@ -14,7 +15,7 @@ import { cn } from '@/utils/cn'
 
 const statusConfig: Record<ReviewStatus, { label: string; className: string }> = {
   idle: { label: 'Idle', className: 'text-muted-foreground' },
-  reviewing: { label: 'Reviewing', className: 'text-amber-400' },
+  reviewing: { label: 'Connecting', className: 'text-amber-400' },
   streaming: { label: 'Streaming', className: 'text-sky-400' },
   completed: { label: 'Completed', className: 'text-emerald-400' },
   error: { label: 'Error', className: 'text-red-400' },
@@ -60,11 +61,9 @@ export function ReviewPanel() {
           </span>
         </div>
         <div className="mt-2.5 flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-muted-foreground truncate text-[11px]">
-              {activeFile?.name ?? 'No active file'}
-            </p>
-          </div>
+          <p className="text-muted-foreground min-w-0 flex-1 truncate text-[11px]">
+            {activeFile?.name ?? 'No active file'}
+          </p>
           <Button
             size="sm"
             className="h-7 px-2.5 text-[11px]"
@@ -83,31 +82,29 @@ export function ReviewPanel() {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {status === 'idle' && (
-          <div className="flex h-full min-h-52 items-center justify-center text-center">
-            <div className="max-w-52">
-              <div className="border-border bg-muted/25 mx-auto mb-3 flex size-9 items-center justify-center rounded-lg border">
-                <ScanSearch className="text-muted-foreground size-4" />
-              </div>
-              <p className="text-xs font-medium">Ready for review</p>
-              <p className="text-muted-foreground mt-1 text-[11px] leading-4">
-                运行 Review，查看当前文件的质量评分和问题列表。
-              </p>
-            </div>
-          </div>
+          <FeedbackState
+            className="h-full"
+            icon={<ScanSearch className="size-4" />}
+            title="Ready for review"
+            description="运行 Review，查看当前文件的质量评分和问题列表。"
+          />
         )}
 
         {status === 'reviewing' && (
-          <div className="flex h-full min-h-52 items-center justify-center text-center">
-            <div>
-              <LoaderCircle className="text-muted-foreground mx-auto mb-3 size-5 animate-spin" />
-              <p className="text-xs font-medium">Reviewing code…</p>
-              <p className="text-muted-foreground mt-1 text-[11px]">正在生成 Mock Review 结果</p>
-            </div>
-          </div>
+          <FeedbackState
+            className="h-full"
+            icon={<LoaderCircle className="size-4 animate-spin" />}
+            title="Starting review"
+            description="正在建立安全的流式连接…"
+          />
         )}
 
         {status === 'streaming' && (
-          <div className="border-border bg-muted/10 min-h-52 rounded-lg border p-3">
+          <div
+            className="border-border bg-muted/10 min-h-52 rounded-lg border p-3"
+            role="status"
+            aria-live="polite"
+          >
             <div className="mb-3 flex items-center gap-2 text-xs font-medium">
               <LoaderCircle className="size-3.5 animate-spin text-sky-400" />
               Streaming Review
@@ -119,13 +116,22 @@ export function ReviewPanel() {
         )}
 
         {status === 'error' && (
-          <div className="flex h-full min-h-52 items-center justify-center text-center">
-            <div className="max-w-52">
-              <AlertTriangle className="mx-auto mb-3 size-5 text-red-400" />
-              <p className="text-xs font-medium">Review failed</p>
-              <p className="text-muted-foreground mt-1 text-[11px] leading-4">{errorMessage}</p>
-            </div>
-          </div>
+          <FeedbackState
+            className="h-full"
+            icon={<AlertTriangle className="size-4 text-red-400" />}
+            title="Review failed"
+            description={errorMessage || '连接暂时不可用，请稍后重试。'}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void review()}
+                disabled={!activeFile}
+              >
+                Retry
+              </Button>
+            }
+          />
         )}
 
         {status === 'completed' && currentResult && (

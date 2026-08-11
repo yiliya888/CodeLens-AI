@@ -52,6 +52,22 @@ function getInitialTheme() {
   return document.documentElement.classList.contains('dark')
 }
 
+function readDraft(key: string) {
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value)
+  } catch {
+    // The file store remains the source of truth when browser storage is unavailable.
+  }
+}
+
 export function CodeEditor({
   value,
   language,
@@ -84,7 +100,7 @@ export function CodeEditor({
   function restoreDraft() {
     if (value) return
 
-    const savedValue = localStorage.getItem(storageKey)
+    const savedValue = readDraft(storageKey)
     if (savedValue) onChange(savedValue)
   }
 
@@ -94,7 +110,7 @@ export function CodeEditor({
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
-      localStorage.setItem(storageKey, code)
+      saveDraft(storageKey, code)
     }, AUTO_SAVE_DELAY)
   }
 
