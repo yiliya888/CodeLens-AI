@@ -1,4 +1,5 @@
-import { Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
+import { History, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import { BrandLogo } from '@/components/brand-logo'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,8 @@ export function AppHeader({
   onSidebarToggle,
   onThemeToggle,
 }: AppHeaderProps) {
+  const navigate = useNavigate()
+
   return (
     <header className="border-border bg-background/90 relative z-50 flex h-12 shrink-0 items-center border-b px-2.5 backdrop-blur-xl">
       <Button
@@ -33,6 +36,15 @@ export function AppHeader({
       </div>
 
       <div className="ml-auto flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => void navigate('/history')}
+          aria-label="Review History"
+          title="Review History"
+        >
+          <History />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

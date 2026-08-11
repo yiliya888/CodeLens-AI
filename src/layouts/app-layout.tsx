@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { ReviewPanel } from '@/components/review/ReviewPanel'
+import { useReviewHistoryRecorder } from '@/hooks/useReviewHistoryRecorder'
 import { AppHeader } from '@/layouts/app-header'
 import { AppSidebar } from '@/layouts/app-sidebar'
 import { EditorPanel } from '@/layouts/editor-panel'
@@ -8,6 +9,8 @@ import { EditorPanel } from '@/layouts/editor-panel'
 export function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
+
+  useReviewHistoryRecorder()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
