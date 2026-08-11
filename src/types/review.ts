@@ -1,4 +1,4 @@
-export type ReviewStatus = 'idle' | 'reviewing' | 'completed' | 'error'
+export type ReviewStatus = 'idle' | 'reviewing' | 'streaming' | 'completed' | 'error'
 
 export type ReviewSeverity = 'error' | 'warning' | 'info'
 

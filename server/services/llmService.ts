@@ -52,6 +52,19 @@ interface DeepSeekResponse {
   }>
 }
 
+interface DeepSeekStreamChunk {
+  choices?: Array<{
+    delta?: {
+      content?: string | null
+    }
+  }>
+}
+
+export interface LLMStreamHandlers {
+  onToken: (token: string) => void
+  onRetry: () => void
+}
+
 interface RawIssue {
   line: number
   severity: ReviewSeverity
@@ -188,11 +201,98 @@ async function requestCompletion(request: ReviewRequest, isRetry: boolean) {
   return payload.choices?.[0]?.message?.content?.trim() ?? ''
 }
 
+async function requestStreamingCompletion(
+  request: ReviewRequest,
+  isRetry: boolean,
+  onToken: (token: string) => void,
+) {
+  const apiKey = getRequiredEnvironment('DEEPSEEK_API_KEY')
+  const baseUrl = (process.env.DEEPSEEK_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, '')
+  const model = process.env.DEEPSEEK_MODEL?.trim() || DEFAULT_MODEL
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: createUserPrompt(request, isRetry) },
+      ],
+      response_format: { type: 'json_object' },
+      thinking: { type: 'disabled' },
+      temperature: 0.2,
+      max_tokens: 4_096,
+      stream: true,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`DeepSeek API request failed (${response.status}): ${errorBody}`)
+  }
+  if (!response.body) throw new Error('DeepSeek streaming response has no body')
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let content = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    buffer += decoder.decode(value, { stream: !done })
+    const lines = buffer.split('\n')
+    buffer = done ? '' : (lines.pop() ?? '')
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line.startsWith('data:')) continue
+
+      const data = line.slice(5).trim()
+      if (!data || data === '[DONE]') continue
+
+      const chunk = JSON.parse(data) as DeepSeekStreamChunk
+      const token = chunk.choices?.[0]?.delta?.content ?? ''
+      if (token) {
+        content += token
+        onToken(token)
+      }
+    }
+
+    if (done) break
+  }
+
+  return content.trim()
+}
+
 export async function reviewWithLLM(request: ReviewRequest): Promise<ReviewResult> {
   let lastParseError: unknown
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const content = await requestCompletion(request, attempt > 0)
+
+    try {
+      return normalizeResult(parseReviewResult(content), request.code)
+    } catch (error) {
+      lastParseError = error
+    }
+  }
+
+  throw new Error('DeepSeek returned invalid JSON after one retry', { cause: lastParseError })
+}
+
+export async function streamReviewWithLLM(
+  request: ReviewRequest,
+  handlers: LLMStreamHandlers,
+): Promise<ReviewResult> {
+  let lastParseError: unknown
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) handlers.onRetry()
+    const content = await requestStreamingCompletion(request, attempt > 0, handlers.onToken)
 
     try {
       return normalizeResult(parseReviewResult(content), request.code)

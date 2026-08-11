@@ -15,6 +15,7 @@ import { cn } from '@/utils/cn'
 const statusConfig: Record<ReviewStatus, { label: string; className: string }> = {
   idle: { label: 'Idle', className: 'text-muted-foreground' },
   reviewing: { label: 'Reviewing', className: 'text-amber-400' },
+  streaming: { label: 'Streaming', className: 'text-sky-400' },
   completed: { label: 'Completed', className: 'text-emerald-400' },
   error: { label: 'Error', className: 'text-red-400' },
 }
@@ -25,8 +26,16 @@ export function ReviewPanel() {
   const activeFile = useFileStore((state) =>
     state.files.find((file) => file.id === state.activeFileId),
   )
-  const { currentResult, status, selectedIssueId, errorMessage, isLoading, review, selectIssue } =
-    useReview(activeFile)
+  const {
+    currentResult,
+    status,
+    selectedIssueId,
+    errorMessage,
+    streamingContent,
+    isLoading,
+    review,
+    selectIssue,
+  } = useReview(activeFile)
   const currentStatus = statusConfig[status]
   const issues = currentResult?.issues ?? EMPTY_ISSUES
   const selectedIssue = issues.find((issue) => issue.id === selectedIssueId) ?? null
@@ -94,6 +103,18 @@ export function ReviewPanel() {
               <p className="text-xs font-medium">Reviewing code…</p>
               <p className="text-muted-foreground mt-1 text-[11px]">正在生成 Mock Review 结果</p>
             </div>
+          </div>
+        )}
+
+        {status === 'streaming' && (
+          <div className="border-border bg-muted/10 min-h-52 rounded-lg border p-3">
+            <div className="mb-3 flex items-center gap-2 text-xs font-medium">
+              <LoaderCircle className="size-3.5 animate-spin text-sky-400" />
+              Streaming Review
+            </div>
+            <pre className="text-muted-foreground font-mono text-[10px] leading-4 break-words whitespace-pre-wrap">
+              {streamingContent || 'Waiting for model output…'}
+            </pre>
           </div>
         )}
 
